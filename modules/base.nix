@@ -1,7 +1,4 @@
-{
-  pkgs,
-  ...
-}: {
+{pkgs, ...}: {
   # internationalization settings
   i18n = {
     defaultLocale = "ja_JP.UTF-8";
@@ -13,7 +10,7 @@
   };
 
   # Time settings
-  time.timezone = "Asia/Tokyo";
+  time.timeZone = "Asia/Tokyo";
   # Enable NTP synchronization
   services.timesyncd.enable = true;
 
