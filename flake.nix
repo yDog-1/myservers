@@ -7,16 +7,17 @@
 
   outputs = {nixpkgs, ...}: let
     system = "aarch64-linux";
-    home-pi = "home-pi";
+    userName = "ydog";
   in {
     nixosConfigurations = {
-      "${home-pi}" = nixpkgs.lib.nixosSystem {
+      home-pi = nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = {inherit userName;};
         modules = [
           ./modules/rpi3.nix
           ./modules/swap.nix
           ./modules/base.nix
-          ./hosts/${home-pi}
+          ./hosts/home-pi
         ];
       };
     };

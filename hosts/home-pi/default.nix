@@ -1,6 +1,8 @@
-{pkgs, ...}: let
-  name = "home-pi";
-in {
+{
+  pkgs,
+  userName,
+  ...
+}: {
   system.stateVersion = "26.05";
 
   fileSystems = {
@@ -12,7 +14,7 @@ in {
   };
 
   networking = {
-    hostName = name;
+    hostName = "home-pi";
     wireless.enable = false;
     useNetworkd = true;
     useDHCP = false;
@@ -44,7 +46,7 @@ in {
 
   users = {
     mutableUsers = false;
-    users."${name}" = {
+    users."${userName}" = {
       isNormalUser = true;
       extraGroups = ["wheel"];
       hashedPassword = "$y$j9T$Q00T/W9Rn7A/opZPpZ55s/$bxQiybcIhASpEKyj8pFoY6M8RybArcq6XYQ4eptN4AB";
