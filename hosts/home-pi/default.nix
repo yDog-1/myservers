@@ -1,5 +1,4 @@
 {
-  pkgs,
   spec,
   authorizedKeys,
   deployAuthorizedKeys,
@@ -71,9 +70,5 @@
         }
       ];
     }
-  ];
-
-  environment.systemPackages = with pkgs; [
-    git
   ];
 }
