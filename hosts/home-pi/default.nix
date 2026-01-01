@@ -1,6 +1,7 @@
 {
   pkgs,
-  userName,
+  spec,
+  authorizedKeys,
   ...
 }: {
   system.stateVersion = "26.05";
@@ -24,7 +25,7 @@
   systemd.network.networks."10-ethernet" = {
     matchConfig.Name = "enu1u1";
     networkConfig = {
-      Address = "192.168.0.100/24";
+      Address = "${spec.ipAddress}/24";
       Gateway = "192.168.0.1";
     };
   };
@@ -46,10 +47,11 @@
 
   users = {
     mutableUsers = false;
-    users."${userName}" = {
+    users."${spec.userName}" = {
       isNormalUser = true;
       extraGroups = ["wheel"];
-      hashedPassword = "$y$j9T$Q00T/W9Rn7A/opZPpZ55s/$bxQiybcIhASpEKyj8pFoY6M8RybArcq6XYQ4eptN4AB";
+      hashedPassword = "$y$j9T$VVfvUlUpJuyT9YO5C4Hsd1$bciuoFM3wCnVAioTAAbJ2a8Goa86u3saqvQgzTefAK5";
+      openssh.authorizedKeys.keys = authorizedKeys;
     };
   };
 
