@@ -15,6 +15,7 @@
         modules = [
           ./modules/rpi3.nix
           ./modules/swap.nix
+          ./modules/base.nix
           ./hosts/${home-pi}
         ];
       };
