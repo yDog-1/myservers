@@ -20,6 +20,7 @@
       "aarch64-darwin"
     ];
     forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+    configRevision = self.shortRev or self.dirtyShortRev or "dirty";
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAE72FEv06JHmDCW4tqQDhYCMrEqzgWB7tue4Ta0HLGu ydog-1@pop-os"
     ];
@@ -41,6 +42,9 @@
           inherit deployAuthorizedKeys;
         };
         modules = [
+          ({ ... }: {
+            system.configurationRevision = configRevision;
+          })
           ./modules/rpi3.nix
           ./modules/swap.nix
           ./modules/base.nix
