@@ -2,6 +2,7 @@
   pkgs,
   spec,
   authorizedKeys,
+  deployAuthorizedKeys,
   ...
 }: {
   system.stateVersion = "26.05";
@@ -53,7 +54,24 @@
       hashedPassword = "$y$j9T$VVfvUlUpJuyT9YO5C4Hsd1$bciuoFM3wCnVAioTAAbJ2a8Goa86u3saqvQgzTefAK5";
       openssh.authorizedKeys.keys = authorizedKeys;
     };
+    users."${spec.deployUserName}" = {
+      isNormalUser = true;
+      extraGroups = ["wheel"];
+      openssh.authorizedKeys.keys = deployAuthorizedKeys;
+    };
   };
+
+  security.sudo.extraRules = [
+    {
+      users = [spec.deployUserName];
+      commands = [
+        {
+          command = "ALL";
+          options = ["NOPASSWD"];
+        }
+      ];
+    }
+  ];
 
   environment.systemPackages = with pkgs; [
     git

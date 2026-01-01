@@ -23,9 +23,11 @@
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAE72FEv06JHmDCW4tqQDhYCMrEqzgWB7tue4Ta0HLGu ydog-1@pop-os"
     ];
+    deployAuthorizedKeys = authorizedKeys;
     spec = {
       home-pi = {
         userName = "ydog";
+        deployUserName = "deploy";
         ipAddress = "192.168.0.100";
       };
     };
@@ -36,6 +38,7 @@
         specialArgs = {
           spec = spec."home-pi";
           inherit authorizedKeys;
+          inherit deployAuthorizedKeys;
         };
         modules = [
           ./modules/rpi3.nix
@@ -50,7 +53,7 @@
       home-pi = spec."home-pi";
     in {
       hostname = home-pi.ipAddress;
-      sshUser = home-pi.userName;
+      sshUser = home-pi.deployUserName;
       remoteBuild = true;
       profiles.system = {
         user = "root";
