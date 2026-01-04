@@ -4,7 +4,6 @@
     enable = true;
     openFirewallDNS = true;
     openFirewallDHCP = false;
-    queryLogDeleter.enable = true;
     lists = [
       {
         url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
@@ -15,6 +14,7 @@
       dns = {
         domainNeeded = true;
         expandHosts = true;
+        queryLogging = false;
       };
     };
   };
