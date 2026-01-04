@@ -4,6 +4,10 @@
   deployAuthorizedKeys,
   ...
 }: {
+  imports = [
+    ./pihole.nix
+  ];
+
   system.stateVersion = "26.05";
 
   fileSystems = {
