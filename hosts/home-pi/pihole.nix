@@ -9,6 +9,14 @@
         url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
         description = "Steven Black's unified adlist";
       }
+      {
+        url = "https://warui.intaa.net/adhosts/hosts.txt";
+        description = "悪いインターネット";
+      }
+      {
+        url = "https://warui.intaa.net/adhosts/hosts_ipv6.txt";
+        description = "悪いインターネット ipv6";
+      }
     ];
     settings = {
       dns = {
