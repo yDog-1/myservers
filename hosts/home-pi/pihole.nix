@@ -1,4 +1,12 @@
 {...}: {
+  # Pi-hole uses port 53; disable systemd-resolved to avoid conflicts.
+  services.resolved.enable = false;
+
+  # Ensure the host itself uses Pi-hole for DNS.
+  networking.nameservers = [
+    "127.0.0.1"
+  ];
+
   # pihole-FTL provides DNS (and optionally DHCP) on NixOS.
   services.pihole-ftl = {
     enable = true;
@@ -23,6 +31,10 @@
         domainNeeded = true;
         expandHosts = true;
         queryLogging = false;
+        upstreams = [
+          "1.1.1.1"
+          "1.0.0.1"
+        ];
       };
     };
   };
