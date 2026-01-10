@@ -11,7 +11,7 @@
   services.pihole-ftl = {
     enable = true;
     openFirewallDNS = true;
-    openFirewallDHCP = false;
+    openFirewallDHCP = true;
     lists = [
       {
         url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
@@ -35,6 +35,16 @@
           "1.1.1.1"
           "1.0.0.1"
         ];
+      };
+
+      dhcp = {
+        active = true;
+        start = "192.168.0.50";
+        end = "192.168.0.150";
+        router = "192.168.0.1";
+        netmask = "255.255.255.0";
+        leaseTime = "24h";
+        ipv6 = true;
       };
     };
   };
