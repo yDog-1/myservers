@@ -12,19 +12,23 @@
     enable = true;
     openFirewallDNS = true;
     openFirewallDHCP = true;
-    lists = [
-      {
-        url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts";
-        description = "Steven Black's unified adlist";
-      }
-      {
-        url = "https://warui.intaa.net/adhosts/hosts.txt";
-        description = "悪いインターネット";
-      }
-      {
-        url = "https://warui.intaa.net/adhosts/hosts_ipv6.txt";
-        description = "悪いインターネット ipv6";
-      }
+    lists = let
+      warui = "https://warui.intaa.net/adhosts/";
+      blocklist = "https://blocklistproject.github.io/Lists/";
+      mkList = url: description: {
+        inherit url description;
+      };
+    in [
+      (mkList "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" "Steven Black's unified adlist")
+      (mkList (warui + "hosts.txt") "悪いインターネット")
+      (mkList (warui + "hosts_ipv6.txt") "悪いインターネット ipv6")
+      (mkList (blocklist + "abuse.txt") "悪質サイト")
+      (mkList (blocklist + "crypto.txt") "クリプトジャッキング")
+      (mkList (blocklist + "fraud.txt") "詐欺サイト")
+      (mkList (blocklist + "gambling.txt") "ギャンブル")
+      (mkList (blocklist + "malware.txt") "マルウェア")
+      (mkList (blocklist + "phishing.txt") "フィッシング")
+      (mkList (blocklist + "ransomware.txt") "ランサムウェア")
     ];
     settings = {
       dns = {
