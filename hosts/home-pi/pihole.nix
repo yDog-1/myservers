@@ -1,4 +1,4 @@
-{...}: {
+{config, ...}: {
   # Pi-hole uses port 53; disable systemd-resolved to avoid conflicts.
   services.resolved.enable = false;
 
@@ -52,6 +52,11 @@
       };
     };
   };
+
+  # Restart Pi-hole only when the generated pihole.toml changes.
+  systemd.services.pihole-ftl.restartTriggers = [
+    config.environment.etc."pihole/pihole.toml".source
+  ];
 
   # Web UI (Pi-hole Dashboard)
   services.pihole-web = {
