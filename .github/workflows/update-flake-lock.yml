@@ -1,0 +1,41 @@
+name: Update flake.lock
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-flake-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Create pull request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: "chore(deps): update flake.lock"
+          title: "chore(deps): update flake.lock"
+          body: |
+            This PR updates `flake.lock` using `nix flake update`.
+          branch: chore/update-flake-lock
+          delete-branch: true
+
+      - name: Enable pull request automerge
+        if: ${{ steps.create-pr.outputs.pull-request-number }}
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.create-pr.outputs.pull-request-number }}
+          merge-method: squash

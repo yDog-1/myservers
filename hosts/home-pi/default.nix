@@ -75,4 +75,16 @@
       ];
     }
   ];
+
+  system.autoUpgrade = {
+    enable = true;
+    dates = "weekly";
+    randomizedDelaySec = "45min";
+    flake = "github:yDog-1/myservers#home-pi";
+    flags = [
+      "--update-input"
+      "nixpkgs"
+    ];
+    allowReboot = false;
+  };
 }
