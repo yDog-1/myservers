@@ -22,7 +22,7 @@
     forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
     configRevision = self.shortRev or self.dirtyShortRev or "dirty";
     authorizedKeys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAE72FEv06JHmDCW4tqQDhYCMrEqzgWB7tue4Ta0HLGu ydog-1@pop-os"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICfgQb8/YcfrNJVF6ho1t4UVj/7Sk6KJ7a2IuHrQ9PA4 ydog-1@nixos"
     ];
     deployAuthorizedKeys = authorizedKeys;
     spec = {
