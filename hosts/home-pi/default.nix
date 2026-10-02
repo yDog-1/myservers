@@ -27,7 +27,10 @@
 
   systemd.network.enable = true;
   systemd.network.networks."10-ethernet" = {
-    matchConfig.Name = "enu1u1";
+    matchConfig = {
+      Name = ["en*" "eth*"];
+      Type = "ether";
+    };
     networkConfig = {
       Address = "${spec.ipAddress}/24";
       Gateway = "192.168.0.1";
