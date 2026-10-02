@@ -11,7 +11,6 @@
   services.pihole-ftl = {
     enable = true;
     openFirewallDNS = true;
-    openFirewallDHCP = true;
     lists = let
       warui = "https://warui.intaa.net/adhosts/";
       blocklist = "https://blocklistproject.github.io/Lists/";
@@ -44,7 +43,7 @@
       };
 
       dhcp = {
-        active = true;
+        active = false;
         start = "192.168.0.50";
         end = "192.168.0.150";
         router = "192.168.0.1";
