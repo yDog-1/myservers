@@ -19,6 +19,7 @@
     deploy-rs,
     ...
   }: let
+    imageCache = (import ./flake.nix).nixConfig;
     system = "aarch64-linux";
     supportedSystems = [
       "x86_64-linux"
@@ -27,6 +28,17 @@
       "aarch64-darwin"
     ];
     forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+    linuxSystems = builtins.filter (system: nixpkgs.lib.hasSuffix "-linux" system) supportedSystems;
+    homePiImage = (self.nixosConfigurations.home-pi.extendModules {
+      specialArgs.imageSource = self;
+      modules = [./hosts/home-pi/image.nix];
+    }).config.system.build.sdImage;
+    imageTools = forAllSystems (system: import ./pkgs/image-tools {
+      pkgs = nixpkgs.legacyPackages.${system};
+      # Keep the derivation available without building the ARM image for the shell/apps.
+      imageDrv = builtins.unsafeDiscardOutputDependency homePiImage.drvPath;
+      nixConfig = imageCache;
+    });
     configRevision = self.shortRev or self.dirtyShortRev or "dirty";
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICfgQb8/YcfrNJVF6ho1t4UVj/7Sk6KJ7a2IuHrQ9PA4 ydog-1@nixos"
@@ -37,6 +49,11 @@
         userName = "ydog";
         deployUserName = "deploy";
         ipAddress = "192.168.0.100";
+        image = {
+          baseName = "nixos-home-pi-${configRevision}";
+          # Keep the installed configuration until these changes are published upstream.
+          autoUpgradeEnable = false;
+        };
       };
     };
   in {
@@ -60,6 +77,14 @@
       };
     };
 
+    packages = forAllSystems (system: imageTools.${system});
+
+    apps = forAllSystems (system: builtins.mapAttrs (_: package: {
+      type = "app";
+      program = nixpkgs.lib.getExe package;
+      meta.description = package.meta.description;
+    }) imageTools.${system});
+
     deploy.nodes.home-pi = let
       home-pi = spec."home-pi";
     in {
@@ -72,13 +97,19 @@
       };
     };
 
-    checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
+    checks = nixpkgs.lib.recursiveUpdate
+      (builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib)
+      (nixpkgs.lib.genAttrs linuxSystems (system: {
+        image-tools = import ./pkgs/image-tools/check.nix {
+          pkgs = nixpkgs.legacyPackages.${system};
+        };
+      }));
 
     devShells = forAllSystems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       default = pkgs.mkShell {
-        packages = [
+        packages = builtins.attrValues imageTools.${system} ++ [
           pkgs.deploy-rs
           pkgs.openssh
           pkgs.git
@@ -86,6 +117,10 @@
         shellHook = ''
           echo "deploy shell: use 'deploy .#home-pi' or 'deploy -i .#home-pi'"
           alias deploy-home-pi='deploy --skip-checks .#home-pi'
+          echo "image tools: export-home-pi-image [--output PATH]"
+          ${nixpkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
+            echo "flash-home-pi-image [--input PATH] DEVICE"
+          ''}
         '';
       };
     });
