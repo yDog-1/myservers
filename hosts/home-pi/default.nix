@@ -6,6 +6,7 @@
 }: {
   imports = [
     ./pihole.nix
+    ./tailscale.nix
   ];
 
   system.stateVersion = "26.05";

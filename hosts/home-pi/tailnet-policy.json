@@ -1,0 +1,14 @@
+{
+  "tagOwners": {
+    "tag:home-pi": ["autogroup:admin"]
+  },
+  "acls": [],
+  "grants": [
+    {
+      "src": ["autogroup:member"],
+      "dst": ["tag:home-pi"],
+      "ip": ["tcp:22"]
+    }
+  ],
+  "ssh": []
+}
