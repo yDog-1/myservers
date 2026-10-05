@@ -58,7 +58,6 @@
     users."${spec.userName}" = {
       isNormalUser = true;
       extraGroups = ["wheel"];
-      hashedPassword = "$y$j9T$VVfvUlUpJuyT9YO5C4Hsd1$bciuoFM3wCnVAioTAAbJ2a8Goa86u3saqvQgzTefAK5";
       openssh.authorizedKeys.keys = authorizedKeys;
     };
     users."${spec.deployUserName}" = {
@@ -70,7 +69,7 @@
 
   security.sudo.extraRules = [
     {
-      users = [spec.deployUserName];
+      users = [spec.userName spec.deployUserName];
       commands = [
         {
           command = "ALL";
