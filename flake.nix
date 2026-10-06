@@ -10,12 +10,17 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     deploy-rs.url = "github:serokell/deploy-rs";
   };
 
   outputs = {
     self,
     nixpkgs,
+    nixos-hardware,
     deploy-rs,
     ...
   }: let
@@ -71,6 +76,7 @@
             system.configurationRevision = configRevision;
           })
           ./modules/rpi3.nix
+          nixos-hardware.nixosModules.raspberry-pi-3
           ./modules/swap.nix
           ./modules/base.nix
           ./hosts/home-pi
