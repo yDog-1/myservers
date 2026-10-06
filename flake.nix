@@ -101,6 +101,9 @@
     checks = nixpkgs.lib.recursiveUpdate
       (builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib)
       (nixpkgs.lib.genAttrs linuxSystems (system: {
+        blocky-config = nixpkgs.legacyPackages.${system}.callPackage ./pkgs/blocky-config-check.nix {
+          configFile = ./hosts/home-pi/blocky.yaml;
+        };
         image-tools = import ./pkgs/image-tools/check.nix {
           pkgs = nixpkgs.legacyPackages.${system};
         };

@@ -5,7 +5,7 @@
     # File transfers use the existing SSH service instead of Taildrop.
     disableTaildrop = true;
     extraSetFlags = [
-      # Keep using the local Pi-hole resolver.
+      # Keep using the local Blocky resolver.
       "--accept-dns=false"
       # Use the existing OpenSSH service and authorized keys.
       "--ssh=false"

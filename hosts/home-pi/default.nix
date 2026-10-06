@@ -5,7 +5,7 @@
   ...
 }: {
   imports = [
-    ./pihole.nix
+    ./blocky.nix
     ./tailscale.nix
   ];
 

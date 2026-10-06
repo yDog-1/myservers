@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/0xERR0R/blocky/main/docs/config.schema.json
+upstreams:
+  groups:
+    default:
+      - "tcp-tls:1.1.1.1:853#cloudflare-dns.com"
+      - "tcp-tls:1.0.0.1:853#cloudflare-dns.com"
+      - "tcp-tls:8.8.8.8:853#dns.google"
+      - "tcp-tls:8.8.4.4:853#dns.google"
+
+blocking:
+  denylists:
+    default:
+      # Steven Black's unified adlist
+      - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+      # 悪いインターネット
+      - https://warui.intaa.net/adhosts/hosts.txt
+      - https://warui.intaa.net/adhosts/hosts_ipv6.txt
+      # Abuse, cryptojacking, fraud, gambling, malware, phishing, ransomware
+      - https://blocklistproject.github.io/Lists/abuse.txt
+      - https://blocklistproject.github.io/Lists/crypto.txt
+      - https://blocklistproject.github.io/Lists/fraud.txt
+      - https://blocklistproject.github.io/Lists/gambling.txt
+      - https://blocklistproject.github.io/Lists/malware.txt
+      - https://blocklistproject.github.io/Lists/phishing.txt
+      - https://blocklistproject.github.io/Lists/ransomware.txt
+  clientGroupsBlock:
+    default:
+      - default
+  blockType: zeroIp
+  loading:
+    strategy: blocking
+    refreshPeriod: 24h
+    concurrency: 2
+    downloads:
+      timeout: 60s
+
+# The host uses Blocky itself, so bootstrap must not use /etc/resolv.conf.
+# Connect directly to IPs over TLS; the suffix supplies certificate validation/SNI.
+bootstrapDns:
+  - "tcp-tls:1.1.1.1:853#cloudflare-dns.com"
+  - "tcp-tls:1.0.0.1:853#cloudflare-dns.com"
+
+rebindingProtection:
+  enable: true
