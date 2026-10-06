@@ -9,7 +9,7 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs";
     nixos-hardware = {
       url = "github:NixOS/nixos-hardware";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -29,21 +29,22 @@
     supportedSystems = [
       "x86_64-linux"
       "aarch64-linux"
-      "x86_64-darwin"
       "aarch64-darwin"
     ];
     forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
     linuxSystems = builtins.filter (system: nixpkgs.lib.hasSuffix "-linux" system) supportedSystems;
-    homePiImage = (self.nixosConfigurations.home-pi.extendModules {
-      specialArgs.imageSource = self;
-      modules = [./hosts/home-pi/image.nix];
-    }).config.system.build.sdImage;
-    imageTools = forAllSystems (system: import ./pkgs/image-tools {
-      pkgs = nixpkgs.legacyPackages.${system};
-      # Keep the derivation available without building the ARM image for the shell/apps.
-      imageDrv = builtins.unsafeDiscardOutputDependency homePiImage.drvPath;
-      nixConfig = imageCache;
-    });
+    homePiImage =
+      (self.nixosConfigurations.home-pi.extendModules {
+        specialArgs.imageSource = self;
+        modules = [./hosts/home-pi/image.nix];
+      }).config.system.build.sdImage;
+    imageTools = forAllSystems (system:
+      import ./pkgs/image-tools {
+        pkgs = nixpkgs.legacyPackages.${system};
+        # Keep the derivation available without building the ARM image for the shell/apps.
+        imageDrv = builtins.unsafeDiscardOutputDependency homePiImage.drvPath;
+        nixConfig = imageCache;
+      });
     configRevision = self.shortRev or self.dirtyShortRev or "dirty";
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICfgQb8/YcfrNJVF6ho1t4UVj/7Sk6KJ7a2IuHrQ9PA4 ydog-1@nixos"
@@ -72,7 +73,7 @@
           inherit deployAuthorizedKeys;
         };
         modules = [
-          ({ ... }: {
+          ({...}: {
             system.configurationRevision = configRevision;
           })
           ./modules/rpi3.nix
@@ -86,11 +87,13 @@
 
     packages = forAllSystems (system: imageTools.${system});
 
-    apps = forAllSystems (system: builtins.mapAttrs (_: package: {
-      type = "app";
-      program = nixpkgs.lib.getExe package;
-      meta.description = package.meta.description;
-    }) imageTools.${system});
+    apps = forAllSystems (system:
+      builtins.mapAttrs (_: package: {
+        type = "app";
+        program = nixpkgs.lib.getExe package;
+        meta.description = package.meta.description;
+      })
+      imageTools.${system});
 
     deploy.nodes.home-pi = let
       home-pi = spec."home-pi";
@@ -104,7 +107,8 @@
       };
     };
 
-    checks = nixpkgs.lib.recursiveUpdate
+    checks =
+      nixpkgs.lib.recursiveUpdate
       (builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib)
       (nixpkgs.lib.genAttrs linuxSystems (system: {
         blocky-config = nixpkgs.legacyPackages.${system}.callPackage ./pkgs/blocky-config-check.nix {
@@ -119,11 +123,13 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       default = pkgs.mkShell {
-        packages = builtins.attrValues imageTools.${system} ++ [
-          pkgs.deploy-rs
-          pkgs.openssh
-          pkgs.git
-        ];
+        packages =
+          builtins.attrValues imageTools.${system}
+          ++ [
+            pkgs.deploy-rs
+            pkgs.openssh
+            pkgs.git
+          ];
         shellHook = ''
           echo "deploy shell: use 'deploy .#home-pi' or 'deploy -i .#home-pi'"
           alias deploy-home-pi='deploy --skip-checks .#home-pi'
