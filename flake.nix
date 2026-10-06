@@ -42,6 +42,7 @@
     configRevision = self.shortRev or self.dirtyShortRev or "dirty";
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICfgQb8/YcfrNJVF6ho1t4UVj/7Sk6KJ7a2IuHrQ9PA4 ydog-1@nixos"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBd1PDAJxRBa+urGGUrfzXCHCPe54gbozBQRURMo5bh3 motorola"
     ];
     deployAuthorizedKeys = authorizedKeys;
     spec = {
