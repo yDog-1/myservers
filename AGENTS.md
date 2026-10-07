@@ -1,37 +1,30 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-This repository is a Nix flake that defines NixOS configurations. Key paths:
-- `flake.nix`: entry point, inputs, host specs, deploy-rs config, dev shells.
-- `hosts/home-pi/`: host-specific NixOS module (`default.nix`).
-- `modules/`: shared modules such as `base.nix`, `rpi3.nix`, `swap.nix`.
-- `flake.lock`: pinned input versions.
-There are no dedicated test or asset directories; evaluation and deploy checks are driven by the flake outputs.
+## Configuration boundaries
+- `home-pi` is an `aarch64-linux` Raspberry Pi 3 system built through `nixos-raspberrypi.lib.nixosSystem`, not the root nixpkgs' NixOS builder.
+- Keep `nixos-raspberrypi`'s nixpkgs input independent: its pin matches cached kernel builds. Root nixpkgs supplies developer tools, standalone checks, and the newer Blocky package required for `rebindingProtection`.
+- Host usernames, deploy address, image options, and SSH keys are wired through `flake.nix`; host services live in `hosts/home-pi/`, shared OS modules in `modules/`.
+- Cache URLs/keys originate in `flake.nix`'s `nixConfig` and are reused by `modules/base.nix` and the image exporter. Keep this shared source of truth.
 
-## Build, Test, and Development Commands
-- `nix develop`: enters the dev shell with deploy tooling and helper alias.
-- `deploy-home-pi`: shorthand for `deploy --skip-checks .#home-pi` (local build).
-- `nix run github:serokell/deploy-rs -- .#home-pi`: run deploy-rs directly.
-- `nix flake check`: evaluate NixOS config and deploy checks (may skip non-local systems).
-- `nix flake check --all-systems`: validate checks across supported systems.
+## Verification and deployment
+- `nix flake check` runs deploy-rs checks plus Linux-only `blocky-config` and `image-tools` checks. `--all-systems` includes foreign-system checks and needs corresponding builders/emulation.
+- Focused Linux checks: `nix build .#checks.x86_64-linux.blocky-config` or `nix build .#checks.x86_64-linux.image-tools`; use `aarch64-linux` on ARM. Image-tool checks use fixtures and mocked Nix/sudo, without building an SD image or writing a disk.
+- Evaluate host wiring without building: `nix eval .#nixosConfigurations.home-pi.config.system.build.toplevel.drvPath`.
+- `nix develop` provides `deploy`, image tools, and the interactive alias `deploy-home-pi` = `deploy --skip-checks .#home-pi`. Run `nix flake check` separately when using this alias.
+- Deployment uses `remoteBuild = false`: the initiating machine needs an ARM builder/emulation for uncached host builds. It connects as the dedicated deploy user and activates as root via passwordless sudo.
 
-## Coding Style & Naming Conventions
-- Nix files use 2-space indentation and trailing commas in lists/attrs.
-- Prefer small, composable modules under `modules/` and host wiring in `hosts/`.
-- Host-specific settings live under `spec` in `flake.nix`.
-- Attribute names use lowerCamelCase (e.g., `deployUserName`, `ipAddress`).
+## SD images
+- The exporter builds `homePiImage`, an `extendModules` variant of the host with `hosts/home-pi/image.nix`; there is no standalone SD-image package output. Entering the dev shell/building the tools does not build the ARM image.
+- `nix run .#export-home-pi-image -- --output PATH` (or `export-home-pi-image` in the dev shell) exports an uncompressed image plus `PATH.sha256`. Default: `.artifacts/home-pi.img`; existing image/sidecar files are never overwritten. Uncached images need an ARM builder/emulation.
+- Linux only: `nix run .#flash-home-pi-image -- --input PATH /dev/disk/by-id/DEVICE`. Requires the exported checksum, a whole-disk target, host sudo, and interactive confirmation; verifies readback after writing.
+- Image sources are copied into `/etc/nixos`. Image auto-upgrade is forced from `spec.home-pi.image.autoUpgradeEnable` (currently false), whereas the ordinary host enables weekly upgrades from GitHub with `--recreate-lock-file`.
+- Preserve the installed-server image overrides in `modules/sd-image.nix`: disabling the recovery/base profile avoids its ZFS build. Root `.artifacts/`, `result`, and `result-*` outputs are ignored.
 
-## Testing Guidelines
-- Primary validation is `nix flake check` which runs `deployChecks`.
-- There is no separate unit test framework in this repo.
-- If you add new checks, keep them platform-aware to avoid cross-arch failures.
+## DNS and network gotchas
+- Edit `hosts/home-pi/blocky.yaml`, not `services.blocky.settings`. The upstream generated-YAML check is disabled; `pkgs/blocky-config-check.nix` validates the actual file both in flake checks and host `system.checks`.
+- The host resolves through Blocky at `127.0.0.1`; keep bootstrap DNS independent of `/etc/resolv.conf`. Tailscale deliberately disables DNS acceptance, Tailscale SSH, and Taildrop, using Blocky and OpenSSH instead.
+- Blocky logs use a journal namespace: inspect with `journalctl --namespace=blocky`, not only the default journal.
 
-## Commit & Pull Request Guidelines
-- Commits follow Conventional Commits: `feat:`, `fix:`, `refactor:`; scopes are optional (e.g., `feat(deploy): ...`).
-- Keep commit bodies descriptive and multi-line for notable changes.
-- PRs should describe intent, list commands run (`nix flake check`), and note any deploy-impacting changes.
-
-## Security & Configuration Notes
-- SSH access is key-based; keep `authorizedKeys` current.
-- Deploy uses a dedicated user with NOPASSWD sudo for non-interactive activation.
-- IPs are defined in `spec` and used for both network config and deploy target.
+## Repository workflow
+- Use Conventional Commits (e.g. `fix(deploy): ...`). Include verification commands and deployment-impacting changes in PR descriptions.
+- The only GitHub workflow updates `flake.lock` with `nix flake update` and opens an auto-merge PR; it does not run configuration checks. Verify dependency changes locally.
