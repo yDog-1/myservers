@@ -84,12 +84,7 @@
     dates = "weekly";
     randomizedDelaySec = "45min";
     flake = "github:yDog-1/myservers#home-pi";
-    flags = [
-      "--update-input"
-      "nixpkgs"
-      "--update-input"
-      "nixos-raspberrypi"
-    ];
+    flags = ["--recreate-lock-file"];
     allowReboot = false;
   };
 }
