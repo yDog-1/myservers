@@ -1,4 +1,8 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  nixConfig,
+  ...
+}: {
   # internationalization settings
   i18n = {
     defaultLocale = "ja_JP.UTF-8";
@@ -32,9 +36,7 @@
   # enable flakes support
   nix.settings = {
     experimental-features = ["nix-command" "flakes"];
-    substituters = ["https://nix-community.cachix.org"];
-    trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-    ];
+    substituters = nixConfig.extra-substituters;
+    trusted-public-keys = nixConfig.extra-trusted-public-keys;
   };
 }

@@ -2,25 +2,27 @@
   description = "My local servers configuration flake";
 
   nixConfig = {
-    extra-substituters = ["https://nix-community.cachix.org"];
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+      "https://nixos-raspberrypi.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
     ];
   };
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
-    nixos-hardware = {
-      url = "github:NixOS/nixos-hardware";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # Keep the provider's nixpkgs independent to match its cached kernel builds.
+    nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     deploy-rs.url = "github:serokell/deploy-rs";
   };
 
   outputs = {
     self,
     nixpkgs,
-    nixos-hardware,
+    nixos-raspberrypi,
     deploy-rs,
     ...
   }: let
@@ -57,7 +59,6 @@
         deployUserName = "deploy";
         ipAddress = "192.168.0.100";
         image = {
-          baseName = "nixos-home-pi-${configRevision}";
           # Keep the installed configuration until these changes are published upstream.
           autoUpgradeEnable = false;
         };
@@ -65,19 +66,23 @@
     };
   in {
     nixosConfigurations = {
-      home-pi = nixpkgs.lib.nixosSystem {
+      home-pi = nixos-raspberrypi.lib.nixosSystem {
         inherit system;
+        # Cache settings are shared with the flake through modules/base.nix.
+        trustCaches = false;
         specialArgs = {
           spec = spec."home-pi";
           inherit authorizedKeys;
           inherit deployAuthorizedKeys;
+          nixConfig = imageCache;
+          # The host's DNS configuration requires Blocky's rebindingProtection support.
+          blockyPackage = nixpkgs.legacyPackages.${system}.blocky;
         };
         modules = [
           ({...}: {
             system.configurationRevision = configRevision;
           })
           ./modules/rpi3.nix
-          nixos-hardware.nixosModules.raspberry-pi-3
           ./modules/swap.nix
           ./modules/base.nix
           ./hosts/home-pi

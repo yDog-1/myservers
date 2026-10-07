@@ -1,17 +1,17 @@
-{pkgs, ...}: {
-  boot = {
-    initrd.availableKernelModules = ["xhci_pci" "usbhid"];
-    loader = {
-      grub.enable = false;
-      generic-extlinux-compatible.enable = true;
-    };
-  };
+{
+  nixos-raspberrypi,
+  ...
+}: {
+  imports = [nixos-raspberrypi.nixosModules.raspberry-pi-3.base];
 
-  hardware.enableRedistributableFirmware = true;
-  # Keep the SD image's firmware configured to chainload the extlinux bootloader.
-  hardware.raspberry-pi.firmware.uboot = {
-    enable = true;
-    # Support both the older Pi 3 package and the unified aarch64 package.
-    package = pkgs.ubootRaspberryPiAarch64 or pkgs.ubootRaspberryPi3_64bit;
+  fileSystems."/boot/firmware" = {
+    device = "/dev/disk/by-label/FIRMWARE";
+    fsType = "vfat";
+    options = [
+      "noatime"
+      "noauto"
+      "x-systemd.automount"
+      "x-systemd.idle-timeout=1min"
+    ];
   };
 }
