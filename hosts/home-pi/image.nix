@@ -6,7 +6,6 @@
 }: {
   imports = [../../modules/sd-image.nix];
 
-  image.baseName = lib.mkForce spec.image.baseName;
   system.autoUpgrade.enable = lib.mkForce spec.image.autoUpgradeEnable;
 
   sdImage.populateRootCommands = lib.mkAfter ''

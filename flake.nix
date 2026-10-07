@@ -59,7 +59,6 @@
         deployUserName = "deploy";
         ipAddress = "192.168.0.100";
         image = {
-          baseName = "nixos-home-pi-${configRevision}";
           # Keep the installed configuration until these changes are published upstream.
           autoUpgradeEnable = false;
         };

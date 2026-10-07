@@ -11,5 +11,4 @@
   ];
 
   hardware.enableAllHardware = lib.mkForce false;
-  sdImage.firmwareSize = lib.mkForce 64;
 }
