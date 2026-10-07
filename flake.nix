@@ -2,9 +2,13 @@
   description = "My local servers configuration flake";
 
   nixConfig = {
-    extra-substituters = ["https://nix-community.cachix.org"];
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+      "https://nixos-raspberrypi.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
     ];
   };
 
@@ -14,6 +18,8 @@
       url = "github:NixOS/nixos-hardware";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Keep the provider's nixpkgs independent to match its cached kernel builds.
+    nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     deploy-rs.url = "github:serokell/deploy-rs";
   };
 
@@ -21,6 +27,7 @@
     self,
     nixpkgs,
     nixos-hardware,
+    nixos-raspberrypi,
     deploy-rs,
     ...
   }: let
@@ -71,6 +78,7 @@
           spec = spec."home-pi";
           inherit authorizedKeys;
           inherit deployAuthorizedKeys;
+          rpiKernelPackages = nixos-raspberrypi.packages.${system}.linuxPackages_rpi3;
         };
         modules = [
           ({...}: {
