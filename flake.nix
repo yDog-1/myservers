@@ -14,10 +14,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
-    nixos-hardware = {
-      url = "github:NixOS/nixos-hardware";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     # Keep the provider's nixpkgs independent to match its cached kernel builds.
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     deploy-rs.url = "github:serokell/deploy-rs";
@@ -26,7 +22,6 @@
   outputs = {
     self,
     nixpkgs,
-    nixos-hardware,
     nixos-raspberrypi,
     deploy-rs,
     ...
@@ -72,21 +67,23 @@
     };
   in {
     nixosConfigurations = {
-      home-pi = nixpkgs.lib.nixosSystem {
+      home-pi = nixos-raspberrypi.lib.nixosSystem {
         inherit system;
+        # Cache settings are shared with the flake through modules/base.nix.
+        trustCaches = false;
         specialArgs = {
           spec = spec."home-pi";
           inherit authorizedKeys;
           inherit deployAuthorizedKeys;
           nixConfig = imageCache;
-          rpiKernelPackages = nixos-raspberrypi.packages.${system}.linuxPackages_rpi3;
+          # The host's DNS configuration requires Blocky's rebindingProtection support.
+          blockyPackage = nixpkgs.legacyPackages.${system}.blocky;
         };
         modules = [
           ({...}: {
             system.configurationRevision = configRevision;
           })
           ./modules/rpi3.nix
-          nixos-hardware.nixosModules.raspberry-pi-3
           ./modules/swap.nix
           ./modules/base.nix
           ./hosts/home-pi

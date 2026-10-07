@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  blockyPackage,
   ...
 }: {
   services.resolved.enable = false;
@@ -15,6 +16,7 @@
 
   services.blocky = {
     enable = true;
+    package = blockyPackage;
     # The upstream check validates settings-generated YAML; use our file instead.
     enableConfigCheck = false;
   };

@@ -87,6 +87,8 @@
     flags = [
       "--update-input"
       "nixpkgs"
+      "--update-input"
+      "nixos-raspberrypi"
     ];
     allowReboot = false;
   };
