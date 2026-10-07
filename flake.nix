@@ -78,6 +78,7 @@
           spec = spec."home-pi";
           inherit authorizedKeys;
           inherit deployAuthorizedKeys;
+          nixConfig = imageCache;
           rpiKernelPackages = nixos-raspberrypi.packages.${system}.linuxPackages_rpi3;
         };
         modules = [
