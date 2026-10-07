@@ -105,7 +105,7 @@
     in {
       hostname = home-pi.ipAddress;
       sshUser = home-pi.deployUserName;
-      remoteBuild = true;
+      remoteBuild = false;
       profiles.system = {
         user = "root";
         path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.home-pi;

@@ -10,7 +10,7 @@ There are no dedicated test or asset directories; evaluation and deploy checks a
 
 ## Build, Test, and Development Commands
 - `nix develop`: enters the dev shell with deploy tooling and helper alias.
-- `deploy-home-pi`: shorthand for `deploy --skip-checks .#home-pi` (remote build).
+- `deploy-home-pi`: shorthand for `deploy --skip-checks .#home-pi` (local build).
 - `nix run github:serokell/deploy-rs -- .#home-pi`: run deploy-rs directly.
 - `nix flake check`: evaluate NixOS config and deploy checks (may skip non-local systems).
 - `nix flake check --all-systems`: validate checks across supported systems.
