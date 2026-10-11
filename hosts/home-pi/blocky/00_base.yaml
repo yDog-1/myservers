@@ -8,8 +8,12 @@ upstreams:
       - "tcp-tls:8.8.4.4:853#dns.google"
 
 blocking:
+  allowlists:
+    default:
+      - /etc/blocky/allowlist.txt
   denylists:
     default:
+      - /etc/blocky/denylist.txt
       # Steven Black's unified adlist
       - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
       # 悪いインターネット
@@ -42,3 +46,7 @@ bootstrapDns:
 
 rebindingProtection:
   enable: true
+
+# The local CLI uses this listener to refresh lists without restarting DNS.
+ports:
+  http: 127.0.0.1:4000
