@@ -3,6 +3,7 @@
   lib,
   pkgs,
   blockyPackage,
+  layatPackage,
   ...
 }: {
   services.resolved.enable = false;
@@ -21,8 +22,15 @@
     enableConfigCheck = false;
   };
 
+  environment.systemPackages = [
+    layatPackage
+    (pkgs.callPackage ../../pkgs/apply-blocky-config.nix {
+      blocky = config.services.blocky.package;
+    })
+  ];
+
   environment.etc = {
-    "blocky/config.yaml".source = ./blocky.yaml;
+    "blocky/00_base.yaml".source = ./blocky/00_base.yaml;
     "systemd/journald@blocky.conf".text = ''
       [Journal]
       Storage=persistent
@@ -37,9 +45,9 @@
   };
 
   systemd.services.blocky = {
-    restartTriggers = [config.environment.etc."blocky/config.yaml".source];
+    restartTriggers = [config.environment.etc."blocky/00_base.yaml".source];
     serviceConfig = {
-      ExecStart = lib.mkForce "${lib.getExe config.services.blocky.package} --config /etc/blocky/config.yaml";
+      ExecStart = lib.mkForce "${lib.getExe config.services.blocky.package} -c /etc/blocky";
       LogNamespace = "blocky";
     };
   };
@@ -73,7 +81,7 @@
   system.checks = [
     (pkgs.callPackage ../../pkgs/blocky-config-check.nix {
       blocky = config.services.blocky.package;
-      configFile = ./blocky.yaml;
+      configFile = ./blocky;
     })
   ];
 }
