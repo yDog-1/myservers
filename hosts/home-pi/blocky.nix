@@ -48,6 +48,7 @@
     restartTriggers = [config.environment.etc."blocky/00_base.yaml".source];
     serviceConfig = {
       ExecStart = lib.mkForce "${lib.getExe config.services.blocky.package} -c /etc/blocky";
+      ExecReload = "${lib.getExe config.services.blocky.package} -c /etc/blocky lists refresh";
       LogNamespace = "blocky";
     };
   };
