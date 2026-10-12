@@ -79,6 +79,8 @@
     }
   ];
 
+  nix.settings.trusted-users = ["deploy"];
+
   nix.gc = {
     automatic = true;
     dates = "weekly";
