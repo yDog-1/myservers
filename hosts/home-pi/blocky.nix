@@ -49,6 +49,8 @@
     serviceConfig = {
       ExecStart = lib.mkForce "${lib.getExe config.services.blocky.package} -c /etc/blocky";
       ExecReload = "${lib.getExe config.services.blocky.package} -c /etc/blocky lists refresh";
+      # Allow slow external list downloads and retries to complete.
+      TimeoutStartSec = "20min";
       LogNamespace = "blocky";
     };
   };
