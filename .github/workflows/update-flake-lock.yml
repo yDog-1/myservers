@@ -9,6 +9,10 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: update-flake-lock
+  cancel-in-progress: false
+
 jobs:
   update-flake-lock:
     runs-on: ubuntu-latest
@@ -22,6 +26,12 @@ jobs:
       - name: Update flake.lock
         run: nix flake update
 
+      - name: Check updated flake
+        run: nix flake check --accept-flake-config --no-update-lock-file
+
+      - name: Evaluate home-pi configuration
+        run: nix eval --accept-flake-config --no-update-lock-file .#nixosConfigurations.home-pi.config.system.build.toplevel.drvPath
+
       - name: Create pull request
         id: create-pr
         uses: peter-evans/create-pull-request@v8
@@ -30,12 +40,18 @@ jobs:
           title: "chore(deps): update flake.lock"
           body: |
             This PR updates `flake.lock` using `nix flake update`.
+
+            Validation completed before creating or updating this PR:
+            - `nix flake check --accept-flake-config --no-update-lock-file`
+            - `nix eval --accept-flake-config --no-update-lock-file .#nixosConfigurations.home-pi.config.system.build.toplevel.drvPath`
           branch: chore/update-flake-lock
           delete-branch: true
 
-      - name: Enable pull request automerge
+      - name: Merge checked pull request
         if: ${{ steps.create-pr.outputs.pull-request-number }}
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ steps.create-pr.outputs.pull-request-number }}
-          merge-method: squash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+          PR_HEAD_SHA: ${{ steps.create-pr.outputs.pull-request-head-sha }}
+        run: gh pr merge "$PR_NUMBER" --squash --match-head-commit "$PR_HEAD_SHA"

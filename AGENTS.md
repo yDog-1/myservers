@@ -34,4 +34,4 @@
 
 ## Repository workflow
 - Use Conventional Commits (e.g. `fix(deploy): ...`). Include verification commands and deployment-impacting changes in PR descriptions.
-- The only GitHub workflow updates `flake.lock` with `nix flake update` and opens an auto-merge PR; it does not run configuration checks. Verify dependency changes locally.
+- The GitHub update workflow runs `nix flake update`, validates the updated lock with `nix flake check` on `x86_64-linux`, and evaluates home-pi's toplevel before creating/updating and squash-merging the PR. Merge is pinned to the PR head SHA; executions are serialized. This does not build the full ARM host system. PRs created with `GITHUB_TOKEN` do not trigger separate `pull_request` workflows, so keep these checks before PR creation and merge.
