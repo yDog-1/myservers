@@ -14,8 +14,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update-flake-lock:
-    runs-on: ubuntu-latest
+  update-lock:
+    runs-on: ubuntu-24.04
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -26,11 +28,81 @@ jobs:
       - name: Update flake.lock
         run: nix flake update
 
-      - name: Check updated flake
+      - name: Detect lock changes
+        id: changes
+        run: |
+          if git diff --quiet -- flake.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload updated flake.lock
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-flake-lock
+          path: flake.lock
+          if-no-files-found: error
+
+  validate:
+    needs: update-lock
+    if: needs.update-lock.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: x86_64-linux
+            runner: ubuntu-24.04
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download updated flake.lock
+        uses: actions/download-artifact@v4
+        with:
+          name: updated-flake-lock
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v21
+
+      - name: Check ARM64 flake
+        if: matrix.system == 'aarch64-linux'
         run: nix flake check --accept-flake-config --no-update-lock-file
 
       - name: Evaluate home-pi configuration
+        if: matrix.system == 'aarch64-linux'
         run: nix eval --accept-flake-config --no-update-lock-file .#nixosConfigurations.home-pi.config.system.build.toplevel.drvPath
+
+      - name: Evaluate x86_64 flake outputs
+        if: matrix.system == 'x86_64-linux'
+        run: nix flake check --no-build --accept-flake-config --no-update-lock-file
+
+      # The x86 deploy-rs checks reference an ARM64 system and cannot be built
+      # on the x86 runner; build its native, standalone checks explicitly.
+      - name: Build x86_64 checks
+        if: matrix.system == 'x86_64-linux'
+        run: |
+          nix build --no-link --accept-flake-config --no-update-lock-file \
+            .#checks.x86_64-linux.blocky-config \
+            .#checks.x86_64-linux.image-tools \
+            .#checks.x86_64-linux.layat-home-pi
+
+  create-pull-request:
+    needs: [update-lock, validate]
+    if: needs.update-lock.outputs.changed == 'true' && needs.validate.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download validated flake.lock
+        uses: actions/download-artifact@v4
+        with:
+          name: updated-flake-lock
 
       - name: Create pull request
         id: create-pr
@@ -41,9 +113,10 @@ jobs:
           body: |
             This PR updates `flake.lock` using `nix flake update`.
 
-            Validation completed before creating or updating this PR:
-            - `nix flake check --accept-flake-config --no-update-lock-file`
-            - `nix eval --accept-flake-config --no-update-lock-file .#nixosConfigurations.home-pi.config.system.build.toplevel.drvPath`
+            Both runners validated the same updated lock file before PR creation:
+            - ARM64: `nix flake check` and evaluation of the home-pi toplevel derivation.
+            - x86_64: `nix flake check --no-build` plus builds of the native
+              `blocky-config`, `image-tools`, and `layat-home-pi` checks.
           branch: chore/update-flake-lock
           delete-branch: true
 
