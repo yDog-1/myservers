@@ -12,7 +12,7 @@
 - Evaluate host wiring without building: `nix eval .#nixosConfigurations.home-pi.config.system.build.toplevel.drvPath`.
 - `nix develop` provides `deploy`, image tools, and the interactive alias `deploy-home-pi` = `deploy --skip-checks .#home-pi`. Run `nix flake check` separately when using this alias.
 - Deployment uses `remoteBuild = false`: the initiating machine needs an ARM builder/emulation for uncached host builds. It connects as the dedicated deploy user and activates as root via passwordless sudo.
-- `deploy` is a host Nix trusted user. Blocky settings and lists are deployed together through `environment.etc` and roll back with the NixOS generation.
+- `deploy` is a host Nix trusted user. Blocky settings and lists are deployed together through `environment.etc` and roll back between post-migration NixOS generations. Rolling back to a pre-migration generation removes the managed list links without restoring layat links; follow the recovery procedure in `hosts/home-pi/blocky/README.md`.
 
 ## SD images
 - The exporter builds `homePiImage`, an `extendModules` variant of the host with `hosts/home-pi/image.nix`; there is no standalone SD-image package output. Entering the dev shell/building the tools does not build the ARM image.
@@ -31,4 +31,4 @@
 
 ## Repository workflow
 - Use Conventional Commits (e.g. `fix(deploy): ...`). Include verification commands and deployment-impacting changes in PR descriptions.
-- The GitHub update workflow runs `nix flake update` once, shares the lock file with x86_64 and ARM64 validation jobs, and creates/squash-merges a PR only after both pass. ARM64 runs `nix flake check` and evaluates home-pi's toplevel; x86_64 evaluates flake outputs and builds the native `blocky-config`, `image-tools`, and `layat-home-pi` checks (the x86 deploy-rs checks reference ARM derivations). Merge is pinned to the PR head SHA; executions are serialized. PRs created with `GITHUB_TOKEN` do not trigger separate `pull_request` workflows, so keep these checks before PR creation and merge.
+- The GitHub update workflow runs `nix flake update` once, shares the lock file with x86_64 and ARM64 validation jobs, and creates/squash-merges a PR only after both pass. ARM64 runs `nix flake check` and evaluates home-pi's toplevel; x86_64 evaluates flake outputs and builds the native `blocky-config` and `image-tools` checks (the x86 deploy-rs checks reference ARM derivations). Merge is pinned to the PR head SHA; executions are serialized. PRs created with `GITHUB_TOKEN` do not trigger separate `pull_request` workflows, so keep these checks before PR creation and merge.

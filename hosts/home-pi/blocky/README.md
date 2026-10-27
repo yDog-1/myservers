@@ -36,12 +36,34 @@ sudo nixos-rebuild switch --flake .#home-pi
 ## 世代管理と SD イメージ
 
 設定とリストは同じ NixOS の世代に含まれ、システムの profile が store の参照を保持します。
-NixOS のロールバックではリストもその世代の内容に戻ります。
+移行後の世代間の NixOS ロールバックではリストもその世代の内容に戻ります。
 SD イメージにも両リストが含まれるため、起動後の初回配置は不要です。
 
+## layat からの移行と復旧
+
 以前 layat で配置していたホストも、通常のデプロイで NixOS 管理のリンクへ切り替わります。
-旧 layat profile は自動削除されません。移行後は旧 manifest による apply / reset を
-実行しないでください。NixOS が管理する配置先への操作を避けるためです。
+初回移行前に home-pi 上で次を実行し、両リストの store パスを記録してください。
+旧 layat profile は復旧用に保持してください。移行時に自動削除はされません。
+
+```sh
+readlink -f /etc/blocky/allowlist.txt
+readlink -f /etc/blocky/denylist.txt
+```
+
+**移行前の NixOS 世代へ戻す場合、リストは自動復元されません。**
+旧世代の activation は NixOS 管理のリストリンクを削除しますが、以前の layat の
+リンクは復元しません。初回デプロイ失敗時の deploy-rs による自動ロールバックでも
+同様です。旧世代に戻った後、home-pi 上で記録した実際の store パスに置き換えて復旧します。
+
+```sh
+sudo ln -sfn /nix/store/RECORDED-ALLOWLIST-PATH /etc/blocky/allowlist.txt
+sudo ln -sfn /nix/store/RECORDED-DENYLIST-PATH /etc/blocky/denylist.txt
+sudo systemctl restart blocky.service
+```
+
+移行前に記録していなかった場合は、保持している旧 layat profile の manifest から
+配置元の store パスを確認してください。
+NixOS 管理の世代で稼働中は、旧 manifest による apply / reset を実行しないでください。
 
 ## 外部リストの手動再読み込みとログ
 

@@ -41,7 +41,7 @@ deploy-home-pi
 - 編集した内容は commit / push なしで反映できます。
 - `/etc/blocky` 内のリストは直接編集せず、リポジトリ内のファイルを編集してください。
 - 設定とリストは NixOS の `environment.etc` で配置し、変更時には Blocky が自動で再起動します。
-- リストも NixOS の世代に含まれ、ロールバック時はその世代の内容に戻ります。
+- リストも NixOS の世代に含まれ、移行後の世代間ではロールバック時にその世代の内容に戻ります。移行前の世代へ戻す場合は、[復旧手順](hosts/home-pi/blocky/README.md#layat-からの移行と復旧)に従ってください。
 
 サーバー上からの操作や移行手順は、[Blocky の運用手順](hosts/home-pi/blocky/README.md)を参照してください。
 
