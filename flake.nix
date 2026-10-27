@@ -16,6 +16,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
     # Keep the provider's nixpkgs independent to match its cached kernel builds.
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
+    # The input provides activation and check helpers; binaries come from root nixpkgs.
     deploy-rs.url = "github:serokell/deploy-rs";
   };
 
@@ -34,6 +35,17 @@
       "aarch64-darwin"
     ];
     forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+    deployLibs = forAllSystems (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      deployPkgs = import nixpkgs {
+        inherit system;
+        overlays = [
+          deploy-rs.overlays.default
+          (_: prev: {deploy-rs = {inherit (pkgs) deploy-rs; inherit (prev.deploy-rs) lib;};})
+        ];
+      };
+    in
+      deployPkgs.deploy-rs.lib);
     linuxSystems = builtins.filter (system: nixpkgs.lib.hasSuffix "-linux" system) supportedSystems;
     homePiImage =
       (self.nixosConfigurations.home-pi.extendModules {
@@ -108,13 +120,13 @@
       remoteBuild = false;
       profiles.system = {
         user = "root";
-        path = deploy-rs.lib.aarch64-linux.activate.nixos self.nixosConfigurations.home-pi;
+        path = deployLibs.aarch64-linux.activate.nixos self.nixosConfigurations.home-pi;
       };
     };
 
     checks =
       nixpkgs.lib.recursiveUpdate
-      (builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib)
+      (builtins.mapAttrs (_: deployLib: deployLib.deployChecks self.deploy) deployLibs)
       (nixpkgs.lib.genAttrs linuxSystems (system: {
         blocky-config = nixpkgs.legacyPackages.${system}.callPackage ./pkgs/blocky-config-check.nix {
           configFile = ./hosts/home-pi/blocky;
