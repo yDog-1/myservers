@@ -3,7 +3,6 @@
   lib,
   pkgs,
   blockyPackage,
-  layatPackage,
   ...
 }: {
   services.resolved.enable = false;
@@ -23,7 +22,6 @@
   };
 
   environment.systemPackages = [
-    layatPackage
     (pkgs.callPackage ../../pkgs/apply-blocky-config.nix {
       blocky = config.services.blocky.package;
     })
@@ -31,6 +29,8 @@
 
   environment.etc = {
     "blocky/00_base.yaml".source = ./blocky/00_base.yaml;
+    "blocky/allowlist.txt".source = ./blocky/allowlist.txt;
+    "blocky/denylist.txt".source = ./blocky/denylist.txt;
     "systemd/journald@blocky.conf".text = ''
       [Journal]
       Storage=persistent
@@ -45,7 +45,11 @@
   };
 
   systemd.services.blocky = {
-    restartTriggers = [config.environment.etc."blocky/00_base.yaml".source];
+    restartTriggers = map (name: config.environment.etc."blocky/${name}".source) [
+      "00_base.yaml"
+      "allowlist.txt"
+      "denylist.txt"
+    ];
     serviceConfig = {
       ExecStart = lib.mkForce "${lib.getExe config.services.blocky.package} -c /etc/blocky";
       ExecReload = "${lib.getExe config.services.blocky.package} -c /etc/blocky lists refresh";

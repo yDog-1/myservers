@@ -14,13 +14,8 @@ nix develop
 
 ## デプロイ
 
-初回は、Blocky が使用するリストを先に配置します。
-
-```sh
-layat-home-pi
-```
-
-構成を変更したら、検証してデプロイします。
+構成や Blocky のリストを変更したら、検証してデプロイします。
+初回も同じ手順で、設定とリストがまとめて配置されます。
 
 ```sh
 nix flake check
@@ -39,14 +34,14 @@ deploy-home-pi
 編集後、次を実行します。
 
 ```sh
-layat-home-pi --refresh
+nix flake check
+deploy-home-pi
 ```
 
 - 編集した内容は commit / push なしで反映できます。
 - `/etc/blocky` 内のリストは直接編集せず、リポジトリ内のファイルを編集してください。
-- リスト更新に NixOS 全体のデプロイは不要です。基本設定の `00_base.yaml` を変更した場合はデプロイしてください。
-- デプロイや NixOS rollback は、配置済みリストを更新・巻き戻しません。
-- 配置後の検証・再読み込みに失敗しても、新しいリストは配置されたままです。原因を解消して再実行してください。
+- 設定とリストは NixOS の `environment.etc` で配置し、変更時には Blocky が自動で再起動します。
+- リストも NixOS の世代に含まれ、移行後の世代間ではロールバック時にその世代の内容に戻ります。移行前の世代へ戻す場合は、[復旧手順](hosts/home-pi/blocky/README.md#layat-からの移行と復旧)に従ってください。
 
 サーバー上からの操作や移行手順は、[Blocky の運用手順](hosts/home-pi/blocky/README.md)を参照してください。
 
@@ -76,7 +71,7 @@ flash-home-pi-image --input .artifacts/home-pi.img /dev/disk/by-id/DEVICE
 - `DEVICE` は対象の SD カード全体を指すパスに置き換えてください。書き込み先の既存データは消去されます。
 - 出力先に既存のイメージやチェックサムがある場合、エクスポートは停止します。
 - 書き込みには、イメージと同時に出力される `.sha256` ファイルが必要です。
-- 新規 SD カードでは、起動後にリストの初回配置が必要です。[サーバー上からの配置手順](hosts/home-pi/blocky/README.md#home-pi-上からの初回配置)を参照してください。
+- SD イメージには設定とリストが含まれ、起動後の初回配置は不要です。
 
 ## 自動更新の注意
 
