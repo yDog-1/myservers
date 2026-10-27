@@ -1,2 +1,3 @@
 # Local exceptions to the default deny lists. One domain per line.
 s.youtube.com
+embed.pixiv.net
