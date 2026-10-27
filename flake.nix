@@ -5,12 +5,10 @@
     extra-substituters = [
       "https://nix-community.cachix.org"
       "https://nixos-raspberrypi.cachix.org"
-      "https://yasunori0418.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
-      "yasunori0418.cachix.org-1:mC1j+M5A6063OHaOB5bH2nS0BiCW/BJsSRiOWjLeV9o="
     ];
   };
 
@@ -19,8 +17,6 @@
     # Keep the provider's nixpkgs independent to match its cached kernel builds.
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     deploy-rs.url = "github:serokell/deploy-rs";
-    # Match the provider's tested and cached CLI build.
-    layat.url = "github:yasunori0418/layat";
   };
 
   outputs = {
@@ -28,7 +24,6 @@
     nixpkgs,
     nixos-raspberrypi,
     deploy-rs,
-    layat,
     ...
   }: let
     imageCache = (import ./flake.nix).nixConfig;
@@ -51,11 +46,6 @@
         # Keep the derivation available without building the ARM image for the shell/apps.
         imageDrv = builtins.unsafeDiscardOutputDependency homePiImage.drvPath;
         nixConfig = imageCache;
-      });
-    layatHomePi = forAllSystems (system:
-      import ./pkgs/layat-home-pi {
-        pkgs = nixpkgs.legacyPackages.${system};
-        homePi = spec.home-pi;
       });
     configRevision = self.shortRev or self.dirtyShortRev or "dirty";
     authorizedKeys = [
@@ -87,7 +77,6 @@
           nixConfig = imageCache;
           # The host's DNS configuration requires Blocky's rebindingProtection support.
           blockyPackage = nixpkgs.legacyPackages.${system}.blocky;
-          layatPackage = layat.packages.${system}.layat;
         };
         modules = [
           ({...}: {
@@ -101,19 +90,7 @@
       };
     };
 
-    packages = forAllSystems (system:
-      imageTools.${system}
-      // {layat-home-pi = layatHomePi.${system};}
-      // nixpkgs.lib.optionalAttrs (system == "aarch64-linux") {
-        home-pi-layat = layat.packages.aarch64-linux.layat;
-      });
-
-    layat = forAllSystems (system: {
-      home-pi-blocky-lists = import ./hosts/home-pi/blocky/layat.nix {
-        pkgs = nixpkgs.legacyPackages.${system};
-        layatLib = layat.lib;
-      };
-    });
+    packages = imageTools;
 
     apps = forAllSystems (system:
       builtins.mapAttrs (_: package: {
@@ -121,7 +98,7 @@
         program = nixpkgs.lib.getExe package;
         meta.description = package.meta.description;
       })
-      (imageTools.${system} // {layat-home-pi = layatHomePi.${system};}));
+      imageTools.${system});
 
     deploy.nodes.home-pi = let
       home-pi = spec."home-pi";
@@ -145,12 +122,6 @@
         image-tools = import ./pkgs/image-tools/check.nix {
           pkgs = nixpkgs.legacyPackages.${system};
         };
-        layat-home-pi = import ./pkgs/layat-home-pi/check.nix {
-          pkgs = nixpkgs.legacyPackages.${system};
-          manifest = self.layat.${system}.home-pi-blocky-lists;
-          allowlistFile = ./hosts/home-pi/blocky/allowlist.txt;
-          denylistFile = ./hosts/home-pi/blocky/denylist.txt;
-        };
       }));
 
     devShells = forAllSystems (system: let
@@ -163,13 +134,10 @@
             pkgs.deploy-rs
             pkgs.openssh
             pkgs.git
-            layat.packages.${system}.layat
-            layatHomePi.${system}
           ];
         shellHook = ''
           echo "deploy shell: use 'deploy .#home-pi' or 'deploy -i .#home-pi'"
           alias deploy-home-pi='deploy --skip-checks .#home-pi'
-          echo "list tools: layat-home-pi [--repo PATH] [--refresh]"
           echo "image tools: export-home-pi-image [--output PATH]"
           ${nixpkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
             echo "flash-home-pi-image [--input PATH] DEVICE"
