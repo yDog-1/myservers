@@ -18,7 +18,7 @@
 - The exporter builds `homePiImage`, an `extendModules` variant of the host with `hosts/home-pi/image.nix`; there is no standalone SD-image package output. Entering the dev shell/building the tools does not build the ARM image.
 - `nix run .#export-home-pi-image -- --output PATH` (or `export-home-pi-image` in the dev shell) exports an uncompressed image plus `PATH.sha256`. Default: `.artifacts/home-pi.img`; existing image/sidecar files are never overwritten. Uncached images need an ARM builder/emulation.
 - Linux only: `nix run .#flash-home-pi-image -- --input PATH /dev/disk/by-id/DEVICE`. Requires the exported checksum, a whole-disk target, host sudo, and interactive confirmation; verifies readback after writing.
-- Image sources are copied into `/etc/nixos`. Image auto-upgrade is forced from `spec.home-pi.image.autoUpgradeEnable` (currently false), whereas the ordinary host enables weekly upgrades from GitHub with `--recreate-lock-file`.
+- Image sources are copied into `/etc/nixos`. Image auto-upgrade is forced from `spec.home-pi.image.autoUpgradeEnable` (currently false), whereas the ordinary host enables weekly upgrades from GitHub using the committed lock file.
 - SD images include the Blocky settings and both local lists; no separate initial list placement is needed.
 - Preserve the installed-server image overrides in `modules/sd-image.nix`: disabling the recovery/base profile avoids its ZFS build. Root `.artifacts/`, `result`, and `result-*` outputs are ignored.
 
