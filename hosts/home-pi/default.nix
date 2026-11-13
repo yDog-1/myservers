@@ -92,7 +92,6 @@
     dates = "weekly";
     randomizedDelaySec = "45min";
     flake = "github:yDog-1/myservers#home-pi";
-    flags = ["--recreate-lock-file"];
     allowReboot = false;
   };
 }
