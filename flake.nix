@@ -18,6 +18,10 @@
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
     # The input provides activation and check helpers; binaries come from root nixpkgs.
     deploy-rs.url = "github:serokell/deploy-rs";
+    lanchpad = {
+      url = "github:yDog-1/lanchpad";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -25,6 +29,7 @@
     nixpkgs,
     nixos-raspberrypi,
     deploy-rs,
+    lanchpad,
     ...
   }: let
     imageCache = (import ./flake.nix).nixConfig;
@@ -89,6 +94,7 @@
           nixConfig = imageCache;
           # The host's DNS configuration requires Blocky's rebindingProtection support.
           blockyPackage = nixpkgs.legacyPackages.${system}.blocky;
+          lanchpadPackage = lanchpad.packages.${system}.default;
         };
         modules = [
           ({...}: {

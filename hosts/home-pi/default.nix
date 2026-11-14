@@ -6,6 +6,7 @@
 }: {
   imports = [
     ./blocky.nix
+    ./lanchpad.nix
     ./tailscale.nix
   ];
 

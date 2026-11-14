@@ -45,6 +45,27 @@ deploy-home-pi
 
 サーバー上からの操作や移行手順は、[Blocky の運用手順](hosts/home-pi/blocky/README.md)を参照してください。
 
+## Lanchpad の設定
+
+`home-pi` は Discord bot の Lanchpad を systemd サービスとして実行します。設定ファイルがない場合、サービスは起動をスキップします。SD イメージにも設定ファイルは含まれません。
+
+1. Discord のアプリケーションと bot を作成し、使用するサーバーに追加します。Discord 側でコマンドを使えるユーザーやロールを制限してください。Lanchpad 自体には利用者の認可機能がありません。
+2. `home-pi` 上で `sudo install -d -m 0700 /var/lib/secrets` を実行します。
+3. `sudoedit /var/lib/secrets/lanchpad.env` で次の内容を作成し、実際の値に置き換えます。ブロードキャスト先は対象 PC の LAN に合わせてください。
+
+   ```text
+   DISCORD_BOT_TOKEN=実際のbotトークン
+   DISCORD_APP_ID=アプリケーションID
+   DISCORD_GUILD_ID=サーバーID
+   WOL_TARGETS=desktop=00:11:22:33:44:55@192.168.0.255:9
+   ```
+
+4. `sudo chown root:root /var/lib/secrets/lanchpad.env` と `sudo chmod 600 /var/lib/secrets/lanchpad.env` を実行します。
+5. 設定をデプロイした後、`sudo systemctl start lanchpad` を実行します。ファイル作成後に自動起動を待つ必要はありません。
+6. `sudo journalctl -u lanchpad -n 50 --no-pager` でログを確認し、Discord で `/echo` と `/wol` を試します。
+
+設定ファイルは systemd の EnvironmentFile 形式です。シェルスクリプトとして実行せず、Git や Nix store に入れないでください。設定変更後は `sudo systemctl restart lanchpad` を実行します。ファイルの内容は NixOS 世代に含まれないため、ロールバックされません。起動時に指定した Discord サーバーのアプリケーションコマンド一覧が上書きされます。`/wol` の成功応答はパケット送信を示し、PC の起動完了は保証しません。
+
 ## 接続とログ確認
 
 ```sh

@@ -67,6 +67,26 @@
         "type": "github"
       }
     },
+    "lanchpad": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794560765,
+        "narHash": "sha256-sQYDb7VnADVGvOEoYXN8M+MTEdhTHCeyBGT1WLMqitQ=",
+        "owner": "yDog-1",
+        "repo": "lanchpad",
+        "rev": "07235b44ded9cfd5b04f8f83bdc4daa68f73732e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "yDog-1",
+        "repo": "lanchpad",
+        "type": "github"
+      }
+    },
     "nixos-images": {
       "inputs": {
         "nixos-stable": [
@@ -165,6 +185,7 @@
     "root": {
       "inputs": {
         "deploy-rs": "deploy-rs",
+        "lanchpad": "lanchpad",
         "nixos-raspberrypi": "nixos-raspberrypi",
         "nixpkgs": "nixpkgs_3"
       }
